@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="ru">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>1</title>
+	<link rel="stylesheet" href="css/bootstrap.min.css">
+	<link rel="stylesheet" href="css/font-awesome.min.css">
+	<link href="css/styles.css" rel="stylesheet">
+	<script src="js/vue.js"></script>
+</head>
+
+<body>
+	<div class="wrapper">
+		<div class="sample">
+			<form>
+				<div class="progress">
+					<div class="progress-bar" :style="{ width: progress + '%'}"></div>
+				</div>
+				<!-- <div>
+					<div class="form-group" v-for="field,i in info">
+						<label>
+							{{ field.label }}
+							<span v-if="field.activated"
+								:class="field.valid ? 'fa fa-check-circle text-success' : 'fa fa-exclamation-circle text-danger'"></span>
+						</label>
+						<input type="text" class="form-control" :value="field.value"
+							@input="onInput(i, $event.target.value)">
+					</div>
+				</div> -->
+				<hr>
+				<app-input v-for='item,i in info' :label='item.label' :value='item.value'
+					:pattern='item.pattern' :activated="item.activated" :valid="item.valid" 
+					@updated="onInput(i, $event.value)" :key="i">
+				</app-input>
+				<button class="btn btn-primary" :disabled="!formReady">
+					Send Data
+				</button>
+			</form>
+			<pre>
+				{{ info }}
+			</pre>
+			<div>
+				<table class="table table-bordered">
+					<tr>
+						<td></td>
+						<td></td>
+					</tr>
+				</table>
+			</div>
+		</div>
+	</div>
+	<script>
+
+		const AppInput = {
+			props: {
+				label: { type: String, required: true },
+				value: { type: String, default: '' },
+				pattern: {type: RegExp, required:true},
+				activated: Boolean,
+				valid: Boolean,
+			},
+			computed: {
+				isActivated() {
+					return this.activated;
+				},
+				iconClasses() {
+					return {
+						'fa fa-check-circle text-success': this.valid,
+						'fa fa-exclamation-circle text-danger': !this.valid
+					}
+				}
+			},
+			methods: {
+				updated(e) {
+					this.$emit('updated', {value : e.target.value});
+				}
+			},
+			template: `
+					<div class="form-group">
+						<label>
+							{{ label }}
+							<span v-if="isActivated" :class="iconClasses"></span>
+						</label>
+						<input type="text" class="form-control" :value="value" @input="updated"> 
+					</div>`
+		}
+
+		Vue.createApp({
+			components: {
+				AppInput
+			},
+			data: () => ({
+
+				info: [
+					{
+						label: 'Name',
+						value: '',
+						pattern: /^[a-zA-Z ]{2,30}$/
+					},
+					{
+						label: 'Phone',
+						value: '',
+						pattern: /^[0-9]{7,14}$/
+					},
+					{
+						label: 'Email',
+						value: '',
+						pattern: /.+/
+					},
+					{
+						label: 'Some Field 1',
+						value: '',
+						pattern: /.+/
+					},
+					{
+						label: 'Some Field 2',
+						value: '',
+						pattern: /.+/
+					}
+				]
+			}),
+			computed: {
+				progress() {
+					let res = 0;
+					let total = this.info.length;
+					
+					res = this.info.reduce( (sum,item) => sum += Number(item.valid), 0);
+					return ((res / total)*100).toFixed(2);
+				},
+				formReady() {
+					return this.progress > 99;
+				}
+			},
+			methods: {
+				onInput(i, val) {
+					let field = this.info[i];
+					field.value = val.trim();
+					field.activated = true;
+					field.valid = field.pattern.test(field.value);
+				}
+			},
+			created() {
+				this.info.forEach(field => {
+					field.valid = false;
+					field.activated = false;
+				})
+			}
+		}).mount('.sample');
+	</script>
+</body>
+
+</html>
